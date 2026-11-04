@@ -153,3 +153,8 @@ vite.config.ts.timestamp-*
 
 # Turbo Repo
 .turbo
+
+playwright-report
+test-results
+evidencias/diagnostico/
+evidencias/k6/
