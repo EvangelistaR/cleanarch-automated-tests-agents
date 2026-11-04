@@ -3,11 +3,17 @@
   "version": "1.0.0",
   "description": "Laboratório de TDD - aplicação bancária",
   "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
     "test": "jest",
     "test:watch": "jest --watch",
     "test:coverage": "jest --coverage --runInBand",
     "typecheck": "tsc --noEmit",
-    "build:ts": "tsc -p tsconfig.build.json"
+    "build:ts": "tsc -p tsconfig.build.json",
+    "test:bdd": "cucumber-js",
+    "test:bdd:dry": "cucumber-js --dry-run",
+    "test:bdd:full": "cucumber-js && node scripts/verificar-bdd.cjs"
   },
   "repository": {
     "type": "git",

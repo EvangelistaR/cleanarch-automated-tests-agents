@@ -3,10 +3,23 @@
   "testRunner": "jest",
   "jest": {
     "projectType": "custom",
-    "configFile": "jest.domain.config.cjs"
+    "configFile": "jest.config.cjs"
   },
-  "mutate": ["src/domain/Conta.ts"],
+  "mutate": [
+    "src/domain/Conta.ts"
+  ],
   "coverageAnalysis": "perTest",
   "concurrency": 2,
-  "reporters": ["clear-text", "progress", "html"]
+  "reporters": [
+    "clear-text",
+    "progress",
+    "html",
+    "json"
+  ],
+  "ignorePatterns": [
+    ".next/**",
+    "dist/**",
+    "coverage/**",
+    "reports/**"
+  ]
 }

@@ -1,4 +1,4 @@
-name: Testes e qualidade - Lab 02
+name: Testes - Lab 02
 on:
   push:
   pull_request:
@@ -9,23 +9,24 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
-      - name: Node.js 24 LTS
+      - name: Node.js 24
         uses: actions/setup-node@v4
         with:
           node-version: '24'
-          cache: 'npm'
-      - name: Instalar dependencias do lockfile
+          cache: npm
+      - name: Instalar
         run: npm ci
-      - name: Verificar tipos
+      - name: Tipos
         run: npm run typecheck
-      - name: Jest com cobertura
+      - name: Jest e cobertura
         run: npm run test:coverage
-      - name: Build do Next.js
-        run: npm run build
       - name: Publicar cobertura
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: cobertura-jest
-          path: coverage/
-          if-no-files-found: ignore
+          name: evidencias-testes
+          path: |
+            coverage/
+            reports/cucumber.html
+            reports/cucumber.json
+          if-no-files-found: warn

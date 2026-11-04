@@ -1,6 +1,6 @@
 # SPEC-TEST-002 — Estratégia de testes da API de contas
 
-**Versão:** 1.0  
+**Versão:** 2.0  
 **Etapas:** 02 (contas) e integração final de APIs  
 **Dependências:** `specs/api-contas.md` e `specs/transferencia.md`.
 
@@ -160,7 +160,7 @@ Após o professor liberar a etapa de transferência, adicionar `tests/api/fluxo-
 
 ## 6. Evidências e ponto de parada
 
-Registre IDs `CONTA-*`, `CMOCK-*`, `CINT-*`, `BDD-C*` e `FLUXO-*` na matriz `specs/rastreabilidade.md`, com nomes **reais** dos testes, saídas Jest e eventuais decisões sobre mapeamento de erros. As evidências devem separar:
+Registre IDs `CONTA-*`, `CMOCK-*`, `CINT-*` e `FLUXO-*` na matriz `specs/rastreabilidade.md`, com nomes **reais** dos testes, saídas Jest e eventuais decisões sobre mapeamento de erros. As evidências devem separar:
 
 - RED por contrato ainda não implementado;
 - GREEN após menor implementação;
@@ -169,3 +169,10 @@ Registre IDs `CONTA-*`, `CMOCK-*`, `CINT-*`, `BDD-C*` e `FLUXO-*` na matriz `spe
 - testes de fluxo pendentes até autorização da etapa de transferências.
 
 Pare após a API de contas, mesmo que haja novos fluxos previstos na spec. Não avançar automaticamente para transferências ou frontend.
+
+
+## 7. Classificação e limite de evidência
+
+Use a classe e os códigos definidos em `specs/erros-aplicacao.md`. No CMOCK-04, o mock rejeita com `new ErroNegocio('CONTA_JA_EXISTE', 'mensagem de teste')`; não simule um erro genérico com uma mensagem usada como código.
+
+Os seis cenários Cucumber deste laboratório são somente de transferência. Não existem IDs BDD-C nem uma segunda feature obrigatória de contas. Os testes de contas e os fluxos cruzados são executados pelo Jest.

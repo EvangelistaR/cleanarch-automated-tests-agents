@@ -1,79 +1,69 @@
-# SPEC-NEXT-001 — Evolução do laboratório para Next.js
+# SPEC-NEXT-001 — Evolução para Next.js
 
-**Versão:** 1.0  
-**Etapa:** 01 — Preparação e regressão  
-**Pré-requisito:** branch da Aula 01 com domínio bancário e testes unitários funcionais.
+Versão 2.0 — Aula 02. Dependência: domínio e testes existentes da branch-base.
 
-## 1. Objetivo e limite da tarefa
+## Objetivo e invariantes
 
-Evoluir **o repositório existente**, sem `create-next-app`, para Next.js com App Router, TypeScript estrito e Jest. A fonte de verdade para o domínio continua sendo `specs/transferencia.md` (BANK-SPEC-001). A migração **não autoriza** alterar contratos de `Conta`, `NumeroConta`, `TransferenciaValor` ou `Recibo`.
+Evoluir o mesmo projeto para Next.js App Router. Preservar `src/domain/**`, `tests/domain/**`, `specs/transferencia.md` e as dependências existentes. Não utilizar `create-next-app` nem criar um projeto em subpasta.
 
-**Fora de escopo:** formulário React, operações bancárias novas, banco de dados, API de consulta, autenticação, testes E2E, Docker (nesta etapa).
+Não implementar APIs ou formulário nesta etapa. A adaptação de erros será feita separadamente, conforme `specs/erros-aplicacao.md`.
 
-## 2. Estado inicial e invariantes
-
-1. Na branch inicial da Aula 02, `npm test`, `npm run typecheck` e o build **original da Aula 01** devem executar com sucesso. Registre os resultados antes das alterações.
-2. Preserve integralmente `specs/transferencia.md`, `tests/domain/**` e os contratos públicos de `src/domain/**` (ou `src/model/**` quando foi a escolha do aluno).
-3. **Não** renomeie `src/model` para `src/domain` apenas para reproduzir exemplos deste material.
-4. Mantenha `AGENTS.md` da Aula 01 e acrescente as orientações da Aula 02, sem remover as regras anteriores.
-5. Use Node.js 24 LTS e npm. Não gere outro projeto nem outro `package.json` em subdiretório.
-
-## 3. Dependências e configuração esperadas
-
-Instalar na raiz:
+## Regressão inicial
 
 ```bash
-npm install next react react-dom
-npm install --save-dev @types/react @types/react-dom
+npm ci
+npm test -- --runInBand
+npm run typecheck
+npm run build:ts
 ```
 
-Continuar utilizando Jest e `@types/jest`; configurar a suíte geral com `next/jest` conforme a documentação oficial. Os testes de `Request` e `Response` rodam em ambiente **Node**, sem navegador. Não é necessário instalar Testing Library nem jsdom nesta aula.
+Registre resultados reais. A referência consultada tem quatro suítes e 60 testes; essa contagem não é uma obrigação para implementações próprias distintas.
 
-Scripts obrigatórios ao final (adicionar sem apagar scripts úteis):
+Na base, não existem scripts `dev`, `build`, `start` ou `test:bdd`. Sua ausência antes da atividade não é um defeito funcional do domínio.
 
-```json
-{
-  "scripts": {
-    "dev": "next dev",
-    "build": "next build",
-    "start": "next start",
-    "test": "jest",
-    "test:watch": "jest --watch",
-    "test:coverage": "jest --coverage --runInBand",
-    "typecheck": "tsc --noEmit"
-  }
-}
+## Instalação e arquivos
+
+A base já declara React, React DOM e seus tipos. Acrescente Next à raiz:
+
+```bash
+npm install --save-exact next@16.4.5
 ```
 
-> O `build` **muda de significado**: na Aula 01 transpilava via `tsc`; agora produz o build do Next.js. Se o build TypeScript isolado ainda for útil, mantenha-o em outro script, por exemplo `build:ts`, sem conflitar com `noEmit` do Next.
+Use a versão indicada para esta revisão e versione o lockfile. Em projeto próprio sem React/tipos, o professor deverá adequar as dependências antes da migração, sem substituir o package.json inteiro.
 
-## 4. Arquivos mínimos a criar
+Crie `src/app/layout.tsx` com `<html>` e `<body>` e `src/app/page.tsx` com uma mensagem estática de ambiente pronto. Não use fontes externas ou dados bancários nessa página. Mantenha os componentes síncronos e simples.
 
-```text
-src/app/layout.tsx
-src/app/page.tsx
-jest.config.cjs               # atualizar o existente
-next-env.d.ts                 # gerado/ajustado pelo Next
-# opcional: next.config.ts somente se houver necessidade concreta
+O pacote também fornece `next.config.ts` com `agentRules: false`, opção suportada pela versão fixada, para evitar que `next dev` acrescente instruções automáticas ao AGENTS.md pedagógico. Preserve essa configuração durante a atividade.
+
+Copie os modelos reais fornecidos:
+
+```bash
+cp exemplos/jest.next.config.cjs jest.config.cjs
+cp exemplos/tsconfig.next.json tsconfig.json
 ```
 
-`layout.tsx` deve exportar `RootLayout` válido, com `<html>` e `<body>`; `page.tsx` deve mostrar apenas uma mensagem de ambiente pronto. Não crie formulário, componentes bancários nem acesso a dados na página.
+No PowerShell use `Copy-Item origem destino`. O Next pode regenerar `next-env.d.ts` e complementar o tsconfig; preserve strict, inclusão de testes/features e exclusões dos artefatos. Os tipos gerados em `.next` não devem ser escritos manualmente nem versionados.
 
-O `tsconfig.json` deverá continuar com `strict: true` e oferecer suporte a JSX, resolução de módulos do Next e arquivos de tipo gerados pelo framework. Ajuste apenas o necessário; evite apagar opções úteis sem análise. Garanta que Jest reconheça `.test.ts` na pasta `tests/`, mantenha `testEnvironment: 'node'`, `collectCoverageFrom` para código em `src/**` e ignore `.next`, `node_modules`, `dist` e artefatos de cobertura. Exemplo em `exemplos/jest.config.cjs`.
+Mescle ao package.json os scripts `dev: next dev`, `build: next build` e `start: next start`. Preserve todos os scripts originais, inclusive `build:ts`. Consulte `exemplos/package.scripts.final.json` como modelo de mesclagem, não como substituição do package.json.
 
-## 5. Critérios de aceite verificáveis
+O Jest principal passa a usar next/jest em ambiente Node. `jest.domain.config.cjs` permanece independente, com ts-jest e somente `tests/domain/**`. Não instale jsdom ou Testing Library nesta aula.
 
-| ID | Entrada/ação | Resultado esperado |
+## Critérios de aceite
+
+| ID | Verificação | Resultado esperado |
 | --- | --- | --- |
-| NEXT-01 | Executar `npm test -- --runInBand` | Todos os testes da Aula 01 continuam passando; quantidade registrada |
-| NEXT-02 | Executar `npm run typecheck` | Sem erros de tipo; `strict` permanece habilitado |
-| NEXT-03 | Executar `npm run build` | Build Next.js bem-sucedido, sem gerar implementação bancária nova |
-| NEXT-04 | Executar `npm run dev` e abrir `/` | Página mínima exibida corretamente |
-| NEXT-05 | Inspecionar `src/domain` ou `src/model` e `tests/domain` | Classes, assinaturas e testes existentes preservados |
-| NEXT-06 | Inspecionar `package.json` | Scripts requeridos e dependências da migração declarados |
+| NEXT-01 | Jest principal após migração | Testes existentes preservados e aprovados |
+| NEXT-02 | `npm run typecheck` | Exit code 0, strict ativo |
+| NEXT-03 | `npm run build` | Build Next concluído |
+| NEXT-04 | `npm run dev`, abrir `/` | Página mínima exibida |
+| NEXT-05 | Comparar domínio e testes com baseline | Sem mudanças de comportamento, assinaturas ou asserções |
+| NEXT-06 | Conferir scripts e lockfile | Novos scripts presentes; scripts originais e dependências preservados |
+| NEXT-07 | Incluir `features/**/*.ts` no tsconfig | Arquivos BDD serão checados quando criados; não carregados como suítes Jest |
 
-## 6. Procedimento RED/GREEN e parada
+Execute primeiro `npm run build` para gerar tipos do Next e, depois, `npm run typecheck`, Jest e `npm run build:ts`. O build TypeScript isolado continua útil para domínio, mas não substitui o build Next.
 
-Esta é uma etapa de infraestrutura: **não force um RED de negócio**. Faça comparação de regressão *antes/depois*. Registre os comandos, as contagens reais e quaisquer warnings. Se a suíte deixar de passar, investigue a migração em vez de enfraquecer testes antigos.
+Na CI inicial fornecida, troque apenas o passo de `npm run build:ts` por `npm run build` após concluir NEXT-01..07. Cucumber será adicionado à CI somente depois de sua etapa. Não copie ainda o workflow final.
 
-**Ponto de parada:** depois de `NEXT-01..06`, aguarde o professor autorizar a implementação da API. Não antecipe `/api/transferencias`.
+## Evidência e parada
+
+Registre a contagem antes/depois, os comandos, a página mínima e o build. Pare antes das APIs. Problemas de migração devem ser corrigidos na configuração, sem enfraquecer testes do domínio.

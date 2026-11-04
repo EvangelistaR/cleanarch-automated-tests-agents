@@ -2,6 +2,11 @@ networks:
   devops:
     driver: bridge
 
+volumes:
+  sonarqube_data:
+  sonarqube_extensions:
+  sonarqube_logs:
+
 services:
   sonarqube:
     image: sonarqube:25.6.0.109173-community
@@ -10,5 +15,24 @@ services:
       - 9000:9000
     environment:
       - SONAR_ES_BOOTSTRAP_CHECKS_DISABLE=true
+    volumes:
+      - sonarqube_data:/opt/sonarqube/data
+      - sonarqube_extensions:/opt/sonarqube/extensions
+      - sonarqube_logs:/opt/sonarqube/logs
+    networks:
+      - devops
+
+  scanner:
+    image: sonarsource/sonar-scanner-cli:latest
+    profiles:
+      - scan
+    working_dir: /usr/src
+    environment:
+      SONAR_HOST_URL: http://sonarqube:9000
+      SONAR_TOKEN: "${SONAR_TOKEN:-}"
+    volumes:
+      - .:/usr/src
+    depends_on:
+      - sonarqube
     networks:
       - devops

@@ -1,6 +1,6 @@
 # SPEC-TEST-001 — Test doubles, integração e independência
 
-**Versão:** 1.0  
+**Versão:** 2.0  
 **Etapas:** 02 e 03 — TDD da API e comparação de testes  
 **Dependências:** `specs/api-transferencias.md`, `specs/transferencia.md`.
 
@@ -141,3 +141,10 @@ Não copie esse esqueleto como teste aprovado: ele não possui asserções e **n
 ## 6. Ponto de parada
 
 Produzir uma tabela que associe `MOCK-*`, `INT-*` e `API-*` aos títulos reais dos testes, com resultado da execução. Só depois prosseguir a BDD/CI com autorização do professor.
+
+
+## 7. Erros classificados e ordem desta revisão
+
+Pré-requisito: `specs/erros-aplicacao.md`. No MOCK-04, utilizar ErroNegocio com SALDO_INSUFICIENTE. MOCK-05 usa Error genérico com mensagem técnica e espera 500.
+
+Primeiro construir e testar contas; depois criar a factory de transferência com mock; em seguida criar o adaptador real, completar INT-01..06 e ligar a rota. FLUXO-01..04 é verificado em `specs/testes-contas.md`. Não importar o singleton demonstrativo.

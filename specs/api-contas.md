@@ -1,6 +1,6 @@
 # SPEC-API-002 — Cadastro, listagem e consulta de contas por identificador
 
-**Versão:** 1.0  
+**Versão:** 2.0  
 **Etapa:** 02 — TDD dos endpoints de contas  
 **Dependências:** `specs/transferencia.md` (BANK-SPEC-001), `specs/criacao-nextjs.md`.  
 **Natureza:** especificação de comportamento e de contratos públicos; **não é implementação pronta**.
@@ -35,7 +35,7 @@ Content-Type: application/json
 Incluir o cabeçalho `Location: /api/contas/123456`. A conta criada deve passar a existir **apenas uma vez** no cadastro compartilhado, e o saldo retornado deve ser o saldo do objeto real `Conta`.
 
 - `numero` é uma **string de exatamente seis dígitos ASCII** (`^[0-9]{6}$`), inclusive zeros à esquerda.
-- `saldoInicial` é um **number JSON** finito, maior ou igual a zero e com até duas casas decimais, conforme BANK-SPEC-001 DT01, DT02 e DT06. Saldo inicial zero **é válido**.
+- `saldoInicial` é um **number JSON** finito, maior ou igual a zero, com até duas casas decimais e sem ultrapassar `Number.MAX_SAFE_INTEGER`, conforme o domínio existente. Saldo inicial zero **é válido**.
 - Campos adicionais podem ser ignorados. Não criar contrato de `titular`, `agencia` ou `tipo`.
 - Se `Content-Type` estiver ausente mas o corpo for JSON válido, a ausência do cabeçalho não causa erro específico; não criar HTTP 415 nesta aula.
 - Valor monetário é fornecido em reais, não centavos inteiros. Não arredondar entradas inválidas para torná-las válidas.
@@ -122,7 +122,7 @@ export function criarGetContaPorId(
 - O adaptador `src/application/contas/operacoes.ts` deve exportar `criarOperacoesContas(contas: Map<string, Conta>): OperacoesContas`, usando o `Conta` **real** da Aula 01. O `Map` é um fake de armazenamento em memória; não é banco de dados.
 - Criar requer **validar/construir `Conta` antes de inserir**; a inserção ocorre somente depois de todas as validações e da checagem de duplicidade, preservando estado nos erros.
 - Listar e consultar geram DTOs de leitura (`numero`, `saldo`) a partir das instâncias atuais; não expor referências a `Conta` na resposta HTTP.
-- A origem da validação de valores monetários é `Conta`. Se a versão do aluno lança erros genéricos sem código estável, não interpretar `Error.message` por substring: apresentar ao professor a menor proposta para classificar `SALDO_INVALIDO`, preservando testes da Aula 01.
+- A origem da validação monetária é `Conta`. Aplicar `specs/erros-aplicacao.md` antes desta etapa: saldo inicial inválido lança ErroNegocio com SALDO_INVALIDO, preservando mensagens e testes. O handler verifica estrutura/tipos, mas não reimplementa a validação bancária para saldo numérico negativo ou precisão inválida.
 - Um erro desconhecido resulta em `500 ERRO_INTERNO` em vez de ser convertido automaticamente em `400`.
 
 ### Composição no Next.js e versão dos parâmetros
@@ -215,3 +215,12 @@ Não escrever testes vazios ou alterar asserts para fazê-los passar. A evidênc
 Fora do escopo: alteração ou exclusão de contas, saque/depósito via HTTP, autenticação, persistência em disco/banco, concorrência, idempotency keys, paginação, UI, Docker da aplicação e validações bancárias não descritas na Aula 01.
 
 A etapa de contas fica concluída com `CONTA-01..16` cobertos, respostas conforme contrato, adaptador usando `Conta` real, estado isolado nos testes, regressão da Aula 01 passando e `npm test`, `npm run typecheck` e `npm run build` executados com resultados reais. `CONTA-17` e `FLUXO-01..04` **ficam pendentes até a etapa de transferência**, não devendo ser considerados faltas prematuras na etapa 02.
+
+
+## 10. Complementos da revisão 2.0
+
+Pré-requisito: `specs/erros-aplicacao.md`. Os nomes e critérios CONTA-01..17 e FLUXO-01..04 são preservados.
+
+No módulo demonstrativo `src/application/estado-contas.ts`, exportar uma única instância `contasDemonstracao: Map<string, Conta>`, inicialmente vazia. Para garantir identidade dentro do mesmo processo mesmo com recarga de módulos do Next, é permitido armazená-la em propriedade tipada de `globalThis`. Isso não resolve múltiplos processos. Os testes sempre recebem seu próprio Map.
+
+Um saldo numérico acima do máximo da Conta também retorna `400 SALDO_INVALIDO`, sem inserção. Acrescentar esse caso a CONTA-06/CINT-04.

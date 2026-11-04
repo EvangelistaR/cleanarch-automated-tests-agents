@@ -1,6 +1,7 @@
 # Spec — BDD com Cucumber.js no Laboratório 02
 
 **Identificador:** BDD-CUCUMBER-02  
+**Versão:** 2.0  
 **Aplicação:** bank-tdd-lab — Aula 02  
 **Tecnologias:** Node.js 24 LTS, TypeScript, Next.js App Router, Cucumber.js, Gherkin, tsx e Jest  
 **Situação:** especificação fornecida pelo professor; configuração e automação são atividades do aluno.
@@ -18,7 +19,7 @@ Automatizar, com **Cucumber.js**, os comportamentos da API de transferências ba
 - Respeitar `specs/api-transferencias.md` e `specs/mocks-e-integracao.md` em caso de dúvidas sobre precedência dos erros ou outros códigos HTTP.
 - Existir `src/api/transferencias/handler.ts` exportando `criarPostTransferencias` e adaptador que utilize o serviço real de transferência.
 - Utilizar os métodos de Conta efetivamente desenvolvidos na Aula 01, sem reescrever lógica de saldo na automação.
-- O arquivo `features/transferencias.feature` deve ser entregue **preenchido pelo professor**. O trabalho do aluno é configurá-lo e automatizá-lo, não inventar os cenários.
+- O arquivo `specs/transferencias.feature` deve ser entregue **preenchido pelo professor**. O trabalho do aluno é configurá-lo e automatizá-lo, não inventar os cenários.
 
 ## 3. História de usuário
 
@@ -33,9 +34,9 @@ bank-tdd-lab/
 ├── specs/
 │   ├── api-transferencias.md
 │   ├── mocks-e-integracao.md
-│   └── bdd-cucumber.md             # esta especificação, pronta
+│   ├── bdd-cucumber.md             # esta especificação, pronta
+│   └── transferencias.feature      # seis cenários, prontos
 ├── features/
-│   ├── transferencias.feature      # cenários, prontos
 │   ├── step-definitions/
 │   │   └── transferencias.steps.ts  # atividade do aluno
 ├── src/
@@ -43,7 +44,7 @@ bank-tdd-lab/
 │   ├── application/
 │   └── api/transferencias/handler.ts
 ├── tests/                          # testes Jest preservados
-├── cucumber.cjs                    # atividade do aluno
+├── cucumber.cjs                    # fornecido; revisar e explicar
 ├── jest.config.cjs
 ├── package.json
 └── package-lock.json
@@ -56,7 +57,7 @@ bank-tdd-lab/
 Execute no diretório raiz:
 
 ```bash
-npm install --save-dev @cucumber/cucumber tsx
+npm install --save-dev --save-exact @cucumber/cucumber@13.3.0 tsx@4.23.15
 ```
 
 Não instale `@types/cucumber`: o pacote oficial já fornece tipos TypeScript. Preserve a configuração Jest existente; Cucumber terá executor e relatórios próprios.
@@ -65,12 +66,12 @@ Não instale `@types/cucumber`: o pacote oficial já fornece tipos TypeScript. P
 
 ## 6. Atividade B — configurar `cucumber.cjs`
 
-O aluno deve **criar** o arquivo `cucumber.cjs` na raiz. Utilize a configuração-base abaixo como referência:
+O pacote revisado já fornece `cucumber.cjs` na raiz; o aluno deve inspecioná-lo, explicar seus campos e utilizá-lo como configuração efetiva. Utilize a configuração-base abaixo como referência:
 
 ```js
 module.exports = {
   default: {
-    paths: ['features/**/*.feature'],
+    paths: ['specs/transferencias.feature'],
     requireModule: ['tsx/cjs'],
     require: [
       'features/support/**/*.ts',
@@ -89,24 +90,7 @@ module.exports = {
 
 O exemplo pressupõe projeto configurado em **CommonJS** (`package.json` sem `"type": "module"`, ou com `"type": "commonjs"`). O laboratório mantém o arquivo `cucumber.cjs` por simplicidade.
 
-**Se seu projeto usa ESM** (`"type": "module"`), utilize um registrador em `tsx-register.js`:
-
-```js
-import { register } from 'tsx/esm/api';
-register();
-```
-
-E, no `cucumber.cjs`, **troque** `requireModule` e `require` por:
-
-```js
-import: [
-  './tsx-register.js',
-  'features/support/**/*.ts',
-  'features/step-definitions/**/*.ts',
-],
-```
-
-Não mantenha simultaneamente o carregamento CommonJS e o ESM. Esse arranjo segue a documentação de transpilation do Cucumber.js.
+Nesta referência, manter package.json sem `type: module`. A migração para ESM fica fora da atividade; não misture carregamentos.
 
 Explique no relatório os campos `paths`, `requireModule`, `require`, `format`, `publish` e `parallel`. O valor `parallel: 0` facilita a inspeção do isolamento no primeiro experimento.
 
@@ -120,7 +104,8 @@ Preservando todos os scripts existentes, acrescente:
 {
   "scripts": {
     "test:bdd": "cucumber-js",
-    "test:bdd:dry": "cucumber-js --dry-run"
+    "test:bdd:dry": "cucumber-js --dry-run",
+    "test:bdd:full": "cucumber-js && node scripts/verificar-bdd.cjs"
   }
 }
 ```
@@ -160,7 +145,7 @@ Crie `features/step-definitions/transferencias.steps.ts` e implemente as defini�
 | `E a resposta deve conter um comprovante de seis dígitos` | Verificar `^\d{6}$` no campo `comprovante` |
 | `E o erro retornado deve ser "SALDO_INSUFICIENTE"` | Conferir o campo JSON `erro` |
 
-## 9. Cenários de aceite — fornecidos em `features/transferencias.feature`
+## 9. Cenários de aceite — fornecidos em `specs/transferencias.feature`
 
 | ID | Comportamento | Resultado esperado |
 |---|---|---|
@@ -173,7 +158,7 @@ Crie `features/step-definitions/transferencias.steps.ts` e implemente as defini�
 
 Os códigos e mensagens acima são os explicitamente estabelecidos ou exemplificados no material do Laboratório 02. **Outros casos** (conta inexistente, números inválidos, origem igual ao destino, precedência entre erros) devem seguir integralmente `specs/api-transferencias.md`, sem deduzir códigos não especificados nesta spec.
 
-## 11. Atividade E — executar RED, GREEN e REFACTOR
+## 10. Atividade E — executar RED, GREEN e REFACTOR
 
 **RED:** com `.feature` pronto e sem steps, execute `npm run test:bdd`; o Cucumber deverá indicar definições ausentes. Registre esse estado.
 
@@ -193,13 +178,13 @@ npx tsc --noEmit
 
 O `--order random` auxilia a identificar dependência indevida de ordem. Faça mais de uma execução, sem alterar código só para que o resultado passe. Os relatórios serão gerados em `reports/cucumber.html` e `reports/cucumber.json`.
 
-## 12. Integração contínua e relatórios
+## 11. Integração contínua e relatórios
 
-Depois de implementar os steps, acrescente uma etapa ao workflow existente `.github/workflows/tests.yml`, **após `npm ci`**:
+Depois de implementar os steps, acrescente uma etapa ao workflow existente `.github/workflows/ci.yml`, **após `npm ci`**:
 
 ```yaml
 - name: Executar cenários BDD com Cucumber
-  run: npm run test:bdd
+  run: npm run test:bdd:full
 ```
 
 A indentação exata depende da organização de `steps` do workflow existente. Garanta que falhas BDD façam o job falhar. Os testes Jest e o Cucumber devem executar separadamente; não force o Jest a carregar arquivos `features/**/*.ts` como testes.
@@ -212,10 +197,10 @@ reports/
 
 O relatório LCOV atual continuará vindo do Jest. **Executar Cucumber não incorpora, automaticamente, sua execução aos percentuais de cobertura do Jest ou do SonarQube.** Instrumentar e consolidar cobertura BDD é trabalho adicional fora do escopo.
 
-## 13. Critérios de aceite da atividade
+## 12. Critérios de aceite da atividade
 
 - [ ] Dependências `@cucumber/cucumber` e `tsx` instaladas e versionadas no lockfile.
-- [ ] Arquivo `cucumber.cjs` criado, explicado e funcional.
+- [ ] Arquivo `cucumber.cjs` revisado, explicado e funcional.
 - [ ] Scripts `test:bdd` e `test:bdd:dry` criados sem remover os anteriores.
 - [ ] Todos os cenários da feature fornecida têm steps implementados e executados.
 - [ ] Há pelo menos um teste de limite, um de erro de negócio e um de entrada inválida.
@@ -225,3 +210,11 @@ O relatório LCOV atual continuará vindo do Jest. **Executar Cucumber não inco
 - [ ] Relatórios HTML e JSON de uma execução real disponíveis.
 - [ ] GitHub Actions executa Jest e Cucumber sem depender de `npm run dev`.
 - [ ] Os testes anteriores da Aula 01 e da Aula 02 continuam passando.
+
+## 13. Proteção contra execução vazia
+
+Para a evidência final e a CI, executar `npm run test:bdd:full`. Esse script roda Cucumber e, se ele aprovar, executa `scripts/verificar-bdd.cjs`, fornecido no pacote. O verificador exige exatamente os seis IDs bdd-01..06 com steps aprovados no relatório JSON. Zero cenários não é aprovação.
+
+Filtros continuam disponíveis em `npm run test:bdd -- --tags ...`; eles não substituem a execução completa. Depois de uma execução filtrada, rodar `npm run test:bdd:full` para restaurar os seis cenários no relatório. Para testar isolamento, executar `npm run test:bdd -- --order random`, depois a execução completa verificada.
+
+Usar World novo por cenário e functions convencionais quando os steps acessarem `this`. Ler `Response.json()` uma única vez e guardar seu resultado no World. As asserções usam `node:assert/strict`; não importar `expect`, `jest.fn()` ou suítes Jest. O tsconfig inclui `features/**/*.ts`.

@@ -1,6 +1,6 @@
 # SPEC-API-001 — Contrato HTTP de transferências
 
-**Versão:** 1.0  
+**Versão:** 2.0  
 **Etapa:** 02 — TDD da API  
 **Dependências:** `specs/criacao-nextjs.md`, `specs/transferencia.md` (BANK-SPEC-001). 
 
@@ -78,7 +78,7 @@ export function criarPostTransferencias(
 
 O código apresentado acima é o **contrato público a implementar**, não a solução. Mantenha esses nomes para tornar os testes independentes da organização do domínio anterior. É permitido separar os tipos em arquivo próprio apenas se houver justificativa de legibilidade.
 
-Em `src/app/api/transferencias/route.ts`, exportar `POST` que delega à factory. A ligação (`composition root`) deve criar **um adaptador** que localiza contas e chama `TransferenciaValor.transferir` real. Pode-se usar um `Map<string, Conta>` didático como cadastro local da rota, iniciado uma vez por processo, com as contas `123456` (1000) e `654321` (200) para o teste manual. **Não confundir com persistência ou estado compartilhado confiável**; o endpoint demonstrativo pode perder estado ao reiniciar e não suporta concorrência.
+Em `src/app/api/transferencias/route.ts`, exportar `POST` que delega à factory. A ligação (`composition root`) cria **um adaptador** que localiza contas e chama `TransferenciaValor.transferir` real. Ela recebe `contasDemonstracao` do módulo compartilhado `src/application/estado-contas.ts`, o **mesmo Map inicialmente vazio** das rotas de contas. Para o teste manual, criar primeiro `123456`/1000 e `654321`/200 via `POST /api/contas`. **Não confundir com persistência ou estado compartilhado confiável**; o endpoint demonstrativo pode perder estado ao reiniciar e não suporta concorrência.
 
 Para facilitar a compatibilidade entre agentes, a composição pode seguir **este contrato público padronizado**:
 
@@ -101,7 +101,7 @@ O caso de uso/adaptador deve:
 4. Retornar `{ comprovante: recibo.codigo }`.
 5. Aceitar gerador de comprovante injetável para testes determinísticos e não alterar a assinatura pública do domínio.
 
-**Mapeamento de erro de domínio:** o handler só deve conhecer códigos de erro explícitos e estáveis, e nunca fazer `if (error.message.includes('saldo'))`. Se a implementação da Aula 01 tiver somente exceções genéricas, apresente ao professor a menor adaptação necessária (por exemplo, um `ErroNegocio` com `codigo`), preservando mensagens e testes anteriores; **não altere o domínio silenciosamente**. Um erro inesperado deve resultar em `500 ERRO_INTERNO` sem mascarar a falha nos logs de desenvolvimento.
+**Mapeamento de erro:** aplicar `specs/erros-aplicacao.md` antes desta etapa. Reconhecer ErroNegocio e os códigos previstos na tabela; preservar mensagens e testes anteriores do domínio. Erro desconhecido, recibo inválido ou falha de crédito por limite máximo resultam em `500 ERRO_INTERNO`, sem expor mensagem técnica e com saldos preservados. Não interpretar `Error.message` nem transformar todo erro em 400.
 
 **Validação no limite HTTP x domínio:** a camada HTTP verifica os tipos, campos e formato do contrato, mas a autoridade sobre a movimentação e seus invariantes permanece no domínio. Uma checagem de formato na borda não justifica duplicar lógica de saldo, saque, depósito, arredondamento ou transferência.
 
@@ -144,3 +144,10 @@ Fixture de integração, recriada antes de **cada teste**:
 ## 7. Definição de pronto
 
 `API-01..13` cobertos ou lacunas explicitadas, `npm test`, `npm run typecheck` e `npm run build` aprovados, testes antigos preservados e relatório de erros/decisões apresentado. **Não** construir UI nem avançar automaticamente para a próxima atividade.
+
+
+## 8. Complementos da revisão 2.0
+
+A fixture 1000/200 existe somente nos testes isolados e nas contas criadas explicitamente no smoke manual. Não pré-carregar o cadastro global. No servidor demonstrativo, o gerador padrão pode ser aleatório; somente os testes usam comprovante fixo.
+
+As guardas HTTP de tipo, finitude, positividade e precisão do valor protegem o contrato JSON. Elas não substituem a autoridade de Conta sobre os invariantes nem autorizam duplicar saldo, débito, crédito, arredondamento ou rollback na API.

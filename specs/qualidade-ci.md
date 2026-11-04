@@ -1,142 +1,119 @@
-# SPEC-QUAL-001 — CI, cobertura, StrykerJS e SonarQube
+# SPEC-QUAL-001 — CI, cobertura, mutação e SonarQube
 
-**Versão:** 1.0  
-**Etapas:** 05 a 07  
-**Fontes:** `specs/api-transferencias.md` e `specs/mocks-e-integracao.md`.
+Versão 2.0 — Aula 02. Pré-requisitos: etapas de API e BDD concluídas para a validação final; a CI inicial também pode executar sobre o domínio isolado.
 
-## 1. Objetivo, escopo e distinções
+## 1. Evidências diferentes
 
-Confrontar quatro evidências distintas:
-
-| Instrumento | Pergunta respondida | Evidência mínima |
+| Ferramenta | O que observar | Limite da evidência |
 | --- | --- | --- |
-| **Jest** | O comportamento esperado foi observado? | Testes executados, contagem real, falhas e resultados |
-| **Cobertura Jest** | Quais partes do código foram executadas? | `coverage/lcov.info` + linhas/branches por arquivo |
-| **StrykerJS** | Os testes detectam alterações artificiais relevantes? | relatório de mutação e interpretação de um mutante |
-| **SonarQube** | Quais problemas e métricas de qualidade estática existem? | dashboard, cobertura importada, Quality Gate e análise crítica |
+| Jest | Comportamentos e asserções executados | Testes com mock não comprovam movimentação real |
+| Cucumber | Seis cenários com domínio real e steps aprovados | Não executa rede/roteamento ao chamar a factory |
+| LCOV do Jest | Linhas e branches executadas | Não mede força das asserções nem incorpora automaticamente Cucumber |
+| Stryker | Mutantes mortos, sobreviventes e sem cobertura | Sobrevivente exige análise; pode ser equivalente ou fora do contrato |
+| SonarQube | Análise estática, cobertura importada e Quality Gate | O servidor não executa Jest/Stryker por conta própria |
 
-Nunca tratar `100%` de cobertura como prova de conformidade funcional. Não fixar meta arbitrária de cobertura nem desabilitar verificações para produzir nota favorável.
-
-## 2. QUAL-01 — Cobertura local no Jest
-
-Manter `test:coverage` no `package.json`, com cobertura de `src/**/*.{ts,tsx}`. Excluir artefatos gerados, definições `*.d.ts`, build e diretórios de dependências. Qualquer exclusão de código real precisa ser justificada no relatório; **não excluir código para melhorar porcentagem**.
+## 2. QUAL-01 — Cobertura
 
 ```bash
 npm run test:coverage
-# resultado esperado: arquivo coverage/lcov.info
 ```
 
-Registre `Statements`, `Branches`, `Functions` e `Lines`. Compare principalmente handler, adaptador e domínio. Se linhas críticas não forem exercitadas, crie teste baseado em critério de aceite (não apenas para ganhar percentual).
+Exigir `coverage/lcov.info` não vazio. Registrar Statements, Branches, Functions e Lines por domínio, adaptadores e handlers. Não fixar meta arbitrária nem excluir código real para aumentar percentual. O Jest Next fornecido coleta `src/**/*.{ts,tsx}`, excluindo declarações.
 
-## 3. QUAL-02 — GitHub Actions
+A página/layout mínimos podem ter linhas não cobertas; identificar essa limitação sem confundir com ausência de testes de regras bancárias. A automação da interface fica para a próxima aula.
 
-Fornecer `.github/workflows/tests.yml` que rode para `push` e `pull_request` **sem restringir a `main`**, pois cada aluno trabalha em branch própria. O job deve:
+## 3. QUAL-02 — Evolução do workflow único
 
-1. Fazer checkout (`actions/checkout`).
-2. Preparar Node.js 24 com cache npm (`actions/setup-node`).
-3. Executar `npm ci` usando `package-lock.json` versionado.
-4. Executar `npm run typecheck`.
-5. Executar `npm run test:coverage`.
-6. Executar `npm run build`.
-7. Publicar `coverage/` como artifact **mesmo se os testes falharem**, quando gerado.
+O arquivo operacional é `.github/workflows/ci.yml`. O pacote fornece a versão **inicial**, que executa instalação, tipos, Jest/cobertura e `build:ts`, compatível com a base sem Next.
 
-Modelo inicial em `exemplos/.github/workflows/tests.yml` (copiar ao caminho operacional depois que o professor liberar a etapa). A presença do arquivo na branch não comprova execução: capturar link para run, commit SHA, status e resumo dos jobs na aba **Actions**. Sonar local e mutação podem permanecer fora do CI obrigatório deste laboratório para preservar recursos.
-
-## 4. QUAL-03 — StrykerJS (configuração é atividade do aluno)
-
-### 4.1 Instalar
+Após a etapa NEXT, trocar seu passo de build por `npm run build`. Depois de concluir BDD, adotar o modelo final:
 
 ```bash
-npm install --save-dev @stryker-mutator/core @stryker-mutator/jest-runner
+cp exemplos/ci.final.yml .github/workflows/ci.yml
 ```
 
-**Criar**, e não apenas referenciar, `stryker.config.json` na raiz. O modelo `exemplos/stryker.config.json` precisa ser adaptado à organização real dos arquivos: `src/domain/Conta.ts` ou `src/model/Conta.ts`.
+No PowerShell, usar `Copy-Item`. O workflow final executa `npm ci`, `npm run typecheck`, `npm run test:coverage`, `npm run test:bdd:full` e `npm run build`; publica `coverage/` e relatórios Cucumber com `if: always()`. Dispara em push e pull_request sem limitar à main.
 
-Campos exigidos:
+Versionar lockfile e configurações. O aluno precisa de permissão de push/Actions no seu repositório. Apresentar URL do run, SHA, resultados e artifact. Mutação e Sonar local ficam fora da CI obrigatória para controlar recursos. Não adicionar `continue-on-error` ou `--if-present`.
 
-```json
-{
-  "$schema": "./node_modules/@stryker-mutator/core/schema/stryker-schema.json",
-  "testRunner": "jest",
-  "jest": { "projectType": "custom", "configFile": "jest.domain.config.cjs" },
-  "mutate": ["src/domain/Conta.ts"],
-  "coverageAnalysis": "perTest",
-  "concurrency": 2,
-  "reporters": ["clear-text", "progress", "html"]
-}
-```
+## 4. QUAL-03 — StrykerJS
 
-**`mutate` é propositalmente um exemplo:** conferir caminho real e escolher **um arquivo com regra relevante**. Não mutar `tests/**`, `route.ts`, arquivos `.next`, configurações ou a suíte inteira de uma vez.
-
-Como o Jest principal usa `next/jest`, manter `jest.domain.config.cjs` isolado e enxuto com `ts-jest` e `testMatch` para a pasta de testes unitários do domínio (modelo em `exemplos/jest.domain.config.cjs`). Essa configuração reduz dependências de build Next em cada rodada de mutação.
-
-### 4.2 Executar e validar
+A instalação usa o mesmo par de versões para core e runner:
 
 ```bash
+npm install --save-dev --save-exact @stryker-mutator/core@10.1.1 @stryker-mutator/jest-runner@10.1.1
 npx jest --config jest.domain.config.cjs --runInBand
 npx stryker run
 ```
 
-Inspecionar `reports/mutation/mutation.html` (verifique o caminho efetivo mostrado pelo Stryker). Diferenciar:
+O pacote fornece `stryker.config.json` e `jest.domain.config.cjs` efetivos na raiz. O aluno deve explicar e ajustar a configuração, em vez de apenas executá-la sem compreender. Não há dependência de um diretório de modelos inexistente.
 
-- **Killed:** algum teste detectou o mutante.
-- **Survived:** o código mutado continuou compatível com as asserções existentes.
-- **NoCoverage:** mutação não atingida pelos testes medidos.
-- **Timeout:** execução não finalizou no limite; **não** é prova inequívoca de bom teste.
+O alvo inicial é somente `src/domain/Conta.ts`; o executor é Jest; a configuração isolada usa ts-jest sobre `tests/domain/**/*.test.ts`; análise `perTest`; concorrência 2. Não mutar route.ts, testes, configurações ou a aplicação inteira nesse experimento.
 
-Exemplo pedagógico: alteração de `valor > saldo` para `valor >= saldo` deve ser detectada por um teste de **valor igual ao saldo**. O agente deve localizar um mutante real no relatório; se não houver sobreviventes relevantes, não inventar um.
+Registrar em `reports/mutation/` o caminho efetivamente exibido pelo Stryker, score, mortos, sobreviventes, sem cobertura e timeouts. Explicar pelo menos um mutante real e o critério afetado. Se criar um teste novo, registrar o antes/depois sem remover testes antigos.
 
-**Evidência obrigatória:** arquivos de configuração criados, saída real da execução, score informado pela ferramenta, mutante selecionado, regra afetada, teste existente ou novo que o mata e, se houve mudança, comparação antes/depois. Não editar asserções apenas para fabricar mutantes mortos.
+Exemplos para investigação: trocar `valor > saldo` por `valor >= saldo`, ou a comparação de excesso do saldo máximo de `>` para `>=`. O segundo distingue ultrapassar o limite de atingir exatamente o limite. Não criar sobreviventes artificialmente nem assumir que toda alteração de mensagem é um defeito funcional.
 
-## 5. QUAL-04 — SonarQube Community Build no Docker
+## 5. QUAL-04 — SonarQube e scanner
 
-**O servidor e o scanner rodam em contêineres**; os testes Jest continuam executando localmente. O SonarQube importa cobertura, mas não executa os testes nem o Stryker.
+Arquivos efetivos fornecidos: `docker-compose.yml`, `sonar-project.properties` e `.env.example`. O token local usa **somente `.env`**. Servidor e scanner compartilham a rede `devops`; o servidor é acessado no host por localhost:9000 e no scanner por sonarqube:9000.
 
-### 5.1 Pré-requisitos
+Antes: Docker/Compose disponíveis, porta livre e diretório do projeto acessível ao usuário da imagem do scanner. Prepare imagens e recursos antes da aula. O servidor usa a tag já adotada no repositório. O scanner usa a tag `latest`; para repetir uma turma com a mesma imagem, o professor pode registrar e fixar seu digest após o ensaio.
 
-Docker Engine/Desktop e Compose disponíveis, porta 9000 livre, memória suficiente. A imagem demonstrativa do servidor utiliza banco embutido somente para **exercício local**; não configura produção. Confirmar também permissões de leitura/escrita no diretório montado pelo scanner (especialmente em Linux).
-
-### 5.2 Arquivos a criar
-
-- `docker-compose.sonar.yml` — `sonarqube` + `scanner` no profile `scan`.
-- `sonar-project.properties` — chave, caminhos e cobertura LCOV.
-- `.env.sonar` — token local **nunca versionado**; copiar de `.env.sonar.example`.
-
-Modelos completos estão em `exemplos/`. O aluno deve explicar cada seção ao professor, não apenas copiar o resultado do agente.
-
-### 5.3 Geração da cobertura
+### 5.1. Gerar cobertura e iniciar servidor
 
 ```bash
 npm run test:coverage
-# confirme coverage/lcov.info antes do scanner
+docker compose up -d sonarqube
+docker compose ps
 ```
 
-### 5.4 Subir o servidor
+Abra `http://localhost:9000` e espere o servidor ficar operacional. `depends_on` inicia o contêiner, mas não comprova prontidão da aplicação. Para diagnóstico, use `docker compose logs -f sonarqube`; Ctrl+C encerra o acompanhamento dos logs, não o serviço.
+
+### 5.2. Projeto e token
+
+Criar projeto local com chave `bank-tdd-lab-aula-02`. No primeiro acesso da instalação didática, trocar as credenciais iniciais se solicitado. Gerar token com permissão de análise e copiar o modelo:
 
 ```bash
-docker compose -f docker-compose.sonar.yml up -d sonarqube
-docker compose -f docker-compose.sonar.yml ps
-docker compose -f docker-compose.sonar.yml logs -f sonarqube
+cp .env.example .env
 ```
 
-Abra **http://localhost:9000** e espere o SonarQube estar pronto. Credenciais iniciais da instalação didática normalmente são `admin` / `admin`; altere a senha no primeiro acesso e **não** exponha o serviço à internet.
-
-### 5.5 Projeto e token
-
-Criar projeto local com `sonar.projectKey=bank-tdd-lab-aula-02`. Criar token de análise e salvar em `.env.sonar`:
+Editar somente o arquivo local:
 
 ```dotenv
 SONAR_TOKEN=seu_token_local
 ```
 
-**Não** adicionar o token a `sonar-project.properties`, AGENTS.md, GitHub, screenshots ou respostas do agente.
+O Compose lê `.env` e passa o token ao serviço scanner. `.gitignore` preserva a exclusão de `.env` e permite versionar `.env.example` sem segredo. Nunca colocar token nos prompts, properties, Git ou evidências.
 
-### 5.6 Inspeção e encerramento
+### 5.3. Scanner
 
-Registrar valor/estado real do Quality Gate, confiabilidade, segurança, manutenibilidade, duplicação e cobertura importada. Se um indicador não aparecer na edição instalada, registrar a limitação em vez de inventar um valor.
+Com o servidor pronto, execute na raiz do projeto:
 
 ```bash
-docker compose -f docker-compose.sonar.yml down
+docker compose --profile scan run --rm scanner
 ```
 
-Não usar `down -v` inadvertidamente, pois apaga dados do laboratório.
+O projeto é montado em `/usr/src`. O arquivo properties analisa `src`, classifica testes em `tests` e `features` e importa `coverage/lcov.info` do Jest. O diretório `features` deve existir após a implementação do BDD. Não usar localhost como endereço do servidor dentro do scanner.
+
+Para aguardar o resultado do Quality Gate e fazer a execução falhar se ele reprovar, pode-se acrescentar o parâmetro de análise:
+
+```bash
+docker compose --profile scan run --rm scanner -Dsonar.qualitygate.wait=true
+```
+
+Para a atividade, registrar o estado efetivamente observado, inclusive se reprovado; o objetivo é interpretar o resultado. A conclusão da análise não significa automaticamente Quality Gate aprovado.
+
+### 5.4. Leitura e encerramento
+
+Examine confiabilidade, segurança, manutenibilidade, duplicação, cobertura importada e Quality Gate. Se houver cobertura zero, conferir LCOV e os caminhos dos fontes antes de atribuir o problema aos testes. Registrar limitações de indicadores da edição instalada.
+
+```bash
+docker compose down
+```
+
+Os volumes nomeados preservam dados do servidor entre reinícios normais. `down -v` remove esses dados e exige nova configuração. Este ambiente é didático e local; não define implantação de produção.
+
+## 6. Definição de pronto
+
+QUAL-01: LCOV e análise de lacunas. QUAL-02: run real verde de Jest/BDD/build e artifacts. QUAL-03: relatório real e interpretação de mutante. QUAL-04: scanner executado, cobertura importada e Quality Gate observado/interpretado. Não declarar aprovação de ferramentas que não foram executadas.
