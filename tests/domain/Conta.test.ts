@@ -100,6 +100,29 @@ describe("Conta", () => {
     expect(conta.saldo).toBe(Number.MAX_SAFE_INTEGER);
   });
 
+  it("deve aceitar depósito que atinja exatamente Number.MAX_SAFE_INTEGER", () => {
+    const conta = new Conta("123456", Number.MAX_SAFE_INTEGER - 1);
+
+    expect(() => conta.depositar(1)).not.toThrow();
+
+    expect(conta.saldo).toBe(Number.MAX_SAFE_INTEGER);
+  });
+
+  it("deve informar a mensagem de saldo máximo ao rejeitar depósito acima do limite", () => {
+    const conta = new Conta("123456", Number.MAX_SAFE_INTEGER);
+
+    expect(() => conta.depositar(1)).toThrow("Depósito ultrapassa o saldo máximo permitido");
+  });
+
+  it("deve rejeitar valor cuja distância ao centavo é exatamente a tolerância de 1e-6", () => {
+    // 1e-8 * 100 - Math.round(1e-8 * 100) === 1e-6 em ponto flutuante IEEE 754
+    const conta = new Conta("123456", 1000);
+
+    expect(() => conta.depositar(1e-8)).toThrow("Valor deve ser um número finito com até duas casas decimais maior que zero");
+
+    expect(conta.saldo).toBe(1000);
+  });
+
   it("deve permitir criar conta com saldo inicial zero", () => {
     const conta = new Conta("123456", 0);
 

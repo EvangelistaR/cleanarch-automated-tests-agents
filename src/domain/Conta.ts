@@ -1,3 +1,4 @@
+import { ErroNegocio } from "./ErroNegocio";
 import { NumeroConta } from "./NumeroConta";
 
 export class Conta {
@@ -6,7 +7,7 @@ export class Conta {
 
   constructor(numero: string, saldo: number) {
     if (!this.ehValorMonetario(saldo) || saldo < 0 || saldo > Number.MAX_SAFE_INTEGER) {
-      throw new Error("Saldo inicial deve ser um valor com até duas casas decimais entre zero e Number.MAX_SAFE_INTEGER");
+      throw new ErroNegocio("SALDO_INVALIDO", "Saldo inicial deve ser um valor com até duas casas decimais entre zero e Number.MAX_SAFE_INTEGER");
     }
     this.numero = new NumeroConta(numero).numero;
     this._saldo = saldo;
@@ -19,7 +20,7 @@ export class Conta {
   sacar(valor: number): void {
     this.validarValor(valor);
     if (valor > this._saldo) {
-      throw new Error("Saldo insuficiente");
+      throw new ErroNegocio("SALDO_INSUFICIENTE", "Saldo insuficiente");
     }
     this._saldo = this.arredondar(this._saldo - valor);
   }
@@ -34,7 +35,7 @@ export class Conta {
 
   private validarValor(valor: number): void {
     if (!this.ehValorMonetario(valor) || valor <= 0) {
-      throw new Error("Valor deve ser um número finito com até duas casas decimais maior que zero");
+      throw new ErroNegocio("VALOR_INVALIDO", "Valor deve ser um número finito com até duas casas decimais maior que zero");
     }
   }
 

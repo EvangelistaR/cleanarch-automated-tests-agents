@@ -1,4 +1,5 @@
 import { Conta } from "./Conta";
+import { ErroNegocio } from "./ErroNegocio";
 import { Recibo } from "./Recibo";
 
 export class TransferenciaValor {
@@ -10,7 +11,7 @@ export class TransferenciaValor {
 
   transferir(origem: Conta, destino: Conta, valor: number): Recibo {
     if (origem.numero === destino.numero) {
-      throw new Error("Conta de origem e destino devem ser diferentes");
+      throw new ErroNegocio("MESMA_CONTA", "Conta de origem e destino devem ser diferentes");
     }
     const recibo = new Recibo(this.gerarCodigo());
 
