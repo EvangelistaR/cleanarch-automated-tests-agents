@@ -20,6 +20,7 @@ module.exports = {
           strict: true,
           esModuleInterop: true,
           skipLibCheck: true,
+          jsx: 'react-jsx',
           types: ['jest', 'node'],
         },
       },
