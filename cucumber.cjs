@@ -2,7 +2,7 @@
 module.exports = {
   default: {
     // Onde estão os arquivos .feature (fornecido pelo professor).
-    paths: ['specs/transferencias.feature'],
+    paths: ['specs/aula02/transferencias.feature'],
     // Registra o loader tsx para que o Cucumber consiga carregar TypeScript via require().
     requireModule: ['tsx/cjs'],
     // Arquivos carregados antes da execução: World/hooks e step definitions.
