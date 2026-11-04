@@ -3,8 +3,10 @@
   "testRunner": "jest",
   "jest": {
     "projectType": "custom",
-    "configFile": "jest.config.cjs"
+    "configFile": "jest.domain.config.cjs"
   },
+  "htmlReporter": { "fileName": "reports/mutation/mutation.html" },
+  "jsonReporter": { "fileName": "reports/mutation/mutation.json" },
   "mutate": [
     "src/domain/Conta.ts"
   ],
