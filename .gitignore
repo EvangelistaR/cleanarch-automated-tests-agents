@@ -154,6 +154,7 @@ vite.config.ts.timestamp-*
 # Turbo Repo
 .turbo
 
+.swc
 playwright-report
 test-results
 evidencias/diagnostico/
