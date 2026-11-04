@@ -62,3 +62,15 @@ Execute os comandos aplicáveis ao que já existe. Base: Jest, `typecheck` e `bu
 Não use `--if-present`, `continue-on-error`, asserts enfraquecidos ou filtros que escondam falhas para declarar conclusão.
 
 Ao terminar, informe: IDs atendidos; arquivos alterados; testes adicionados; RED/GREEN observados; comandos realmente executados e contagens; evidências produzidas; lacunas e decisões. Sem execução, informe a limitação e não declare aprovação.
+
+## Escopo específico da Aula 03
+
+Nesta etapa são autorizados Playwright Test, a tela didática de transferência
+na preparação do professor e k6 para consulta HTTP. Essas autorizações
+substituem as restrições anteriores que impediam interface e essas ferramentas.
+As regras bancárias continuam em specs/transferencia.md; os contratos HTTP
+continuam nas specs da Aula 02; o contrato da atividade está em
+specs/laboratorio-03.md. Durante o laboratório dos alunos, a tela já é fornecida:
+o trabalho principal é escrever testes, investigar falhas e interpretar métricas.
+Preservar testes anteriores, valores em reais e o comprovante de seis dígitos.
+Não introduzir autenticação, banco de dados, reset de contas ou carga de escrita.

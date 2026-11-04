@@ -5,7 +5,7 @@ module.exports = {
   testEnvironment: 'node',
   roots: ['<rootDir>/tests'],
   collectCoverageFrom: ['src/**/*.{ts,tsx}'],
-  testPathIgnorePatterns: ['/node_modules/', '/.next/', '/dist/', '/coverage/'],
+  testPathIgnorePatterns: ['/node_modules/', '/.next/', '/dist/', '/coverage/', '/tests/e2e/'],
   modulePathIgnorePatterns: ['<rootDir>/.next/', '<rootDir>/dist/'],
   coveragePathIgnorePatterns: ['/node_modules/', '/.next/', '/dist/', '/coverage/'],
   transform: {

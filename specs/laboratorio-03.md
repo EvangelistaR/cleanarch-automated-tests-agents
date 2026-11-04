@@ -1,11 +1,5 @@
 # SPEC-LAB03-001 — Interface, diagnóstico e performance
 
-**Disciplina:** Test Automation & AI Evaluation Engineering  
-**Professor:** Me. João Henrique Victorino da Silva  
-**Aula:** 03 — Playwright e k6  
-**Versão:** 1.0 — 04/11/2026  
-**Roteiro associado:** [ROTEIRO_LABORATORIO_03.md](../ROTEIRO_LABORATORIO_03.md)
-
 ## 1. Objetivo e entregas
 
 Automatizar duas jornadas de transferência pelo navegador, verificar seus efeitos no servidor e diagnosticar falhas com evidências. A comparação de performance complementa a atividade.
@@ -19,17 +13,11 @@ Automatizar duas jornadas de transferência pelo navegador, verificar seus efeit
 | Performance | Interpretar p95, vazão, falhas, checks e thresholds | Obrigatória; usar medições próprias ou material fornecido pelo professor |
 | Execução k6 | Comparar 5 e 10 VUs por 30 segundos | Demonstração guiada ou extensão opcional |
 
-O aluno trabalha sobre a aplicação preparada pelo professor. Construir o frontend e completar as APIs são atividades de preparação, anteriores ao laboratório dos alunos. Não se exige construir outra aplicação durante a aula.
-
 ## 2. Estado da referência e condição de início
 
-Referência consultada: [joaovictorino/cleanarch-automated-tests-agents, branch aula03](https://github.com/joaovictorino/cleanarch-automated-tests-agents/tree/aula03), commit `d408f5ebaf826f1f2c1e4547098ab2d5410b0471`.
+Nesse snapshot existem o domínio bancário, quatro arquivos de testes de domínio, specs da Aula 02 e configurações Next/Jest. **Não existem `src/app`, APIs implementadas, tela de transferência, Playwright ou script k6.** A presença de Next nas dependências não significa que a aplicação esteja pronta. Esta especificação define a evolução necessária. 
 
-Nesse snapshot existem o domínio bancário, quatro arquivos de testes de domínio, specs da Aula 02 e configurações Next/Jest. **Não existem `src/app`, APIs implementadas, tela de transferência, Playwright ou script k6.** A presença de Next nas dependências não significa que a aplicação esteja pronta.
-
-Esta especificação define a evolução necessária. O professor deve fornecer um checkpoint executável, registrar seu commit e ensaiá-lo antes da aula. Não apresentar o snapshot acima como uma base pronta para E2E.
-
-### 2.1. Preparação obrigatória do professor
+### 2.1. Preparação obrigatória
 
 | ID | Condição verificável antes de distribuir a base |
 | --- | --- |
@@ -39,7 +27,7 @@ Esta especificação define a evolução necessária. O professor deve fornecer 
 | PRE-04 | Instruções de escopo do `AGENTS.md` atualizadas para a Aula 03; regressão, tipos e build executados; commit do checkpoint registrado |
 | PRE-05 | Helper de criação/consulta de contas entregue e validado, sem testes E2E de solução prontos; comandos, relatórios e uma evidência de diagnóstico disponíveis |
 
-O `AGENTS.md` atual ainda contém restrições das aulas anteriores, inclusive proibição de frontend. O professor deve acrescentar uma seção específica da Aula 03 autorizando a tela didática durante a preparação e os testes Playwright/k6 nesta etapa, preservando as regras bancárias e as restrições de segurança. Não enviar um agente para implementar a interface com instruções que ainda a proíbam.
+O `AGENTS.md` atual ainda contém restrições das aulas anteriores, inclusive proibição de frontend. Doiseve acrescentar uma seção específica da Aula 03 autorizando a tela didática durante a preparação e os testes Playwright/k6 nesta etapa, preservando as regras bancárias e as restrições de segurança. Não enviar um agente para implementar a interface com instruções que ainda a proíbam.
 
 O ambiente é um processo Next.js local na porta 3000, com frontend e API na mesma origem. Não há autenticação no exercício. Não criar login, token ou serviço na porta 3001 apenas para reproduzir exemplos ilustrativos dos slides.
 
@@ -58,7 +46,7 @@ Regras bancárias continuam em `specs/transferencia.md`. Esta aula acrescenta co
 
 Contas são strings de seis dígitos ASCII. Valores da API são números em **reais**, com até duas casas decimais. O comprovante é uma string que satisfaz `^[0-9]{6}$`.
 
-### 3.1. Ajustes em relação aos exemplos dos slides
+### 3.1. Ajustes 
 
 | Tema | Contrato deste laboratório |
 | --- | --- |
@@ -69,9 +57,7 @@ Contas são strings de seis dígitos ASCII. Valores da API são números em **re
 | Autenticação | Ausente nesta base; os exemplos de Bearer token não se aplicam |
 | Infraestrutura | Estado em memória; nenhum banco de dados ou pool de conexões é acrescentado |
 
-A tabela de cenários abaixo é normativa para esta atividade. Não copiar os valores em centavos dos snippets dos slides para a API em reais.
-
-## 4. Contrato da tela didática — entregue antes da aula
+## 4. Contrato da tela didática
 
 | ID | Comportamento |
 | --- | --- |
@@ -93,8 +79,6 @@ Cada teste cria duas contas novas por `POST /api/contas`. Os números usados aba
 | --- | ---: | ---: | ---: | ---: | ---: | ---: |
 | E2E-01 — aceita | 1000 | 200 | 300 | 201 | 700 | 500 |
 | E2E-02 — rejeitada | 1000 | 200 | 1001 | 422 | 1000 | 200 |
-
-Contrato do helper entregue pelo professor em `tests/e2e/fixtures/contas.ts`:
 
 ```ts
 import type { APIRequestContext } from '@playwright/test';
@@ -188,8 +172,6 @@ Com todos os testes aprovados, a ausência de trace retido é normal. A evidênc
 | CI-02 | Publicar `playwright-report/` e `test-results/` com `if: always()`; falhas dos testes mantêm o job reprovado, sem `continue-on-error` ou `|| true` |
 | CI-03 | Registrar commit e execução real da CI; não deixar `test.only`, `test.skip`, teste vazio ou falha controlada na entrega final |
 
-Em repositório sem permissão de push/Actions, o professor pode fornecer uma execução para análise. O aluno registra essa limitação; não declara que executou a própria CI. Bloqueio de merge depende das regras do repositório e não é configurado por esta atividade.
-
 ## 9. Performance com k6 — demonstração ou extensão
 
 ### 9.1. Modelo de carga
@@ -224,38 +206,6 @@ A tag deve estar também no terceiro argumento de `check`; tags da requisição 
 
 VUs não equivalem a req/s. `http_req_duration` mede a requisição HTTP e não a renderização no navegador. Check falso não reprova sozinho a execução; o threshold de checks cumpre esse papel. Trinta segundos não demonstram soak nem vazamento de memória. Em memória, não há evidência para diagnosticar um pool de banco inexistente.
 
-## 10. Entrega e rastreabilidade
-
-Entregar código em branch/repositório próprio e um `evidencias/lab03.md` com:
-
-1. Commit da base, commit da entrega, versões, comandos e resultados reais.
-2. Resultado dos dois testes, incluindo números sintéticos, comprovante da aceitação e os quatro saldos finais observados pela API nos dois cenários.
-3. Relatório final e evidências separadas de diagnóstico; links de CI/artifacts quando disponíveis.
-4. Análise de performance com medições reais ou dados do professor identificados como tal.
-5. Lacunas, limitações e revisão das sugestões de IA.
-
-Preencher sem inventar execução:
-
-| Critérios | Testes/arquivos ou relatório | Resultado real / pendência |
-| --- | --- | --- |
-| PRE-01..05 e UI-01..05 | Checkpoint disponibilizado pelo professor | A preencher |
-| E2E-01 | Teste de transferência aceita | A preencher |
-| E2E-02 | Teste de saldo insuficiente | A preencher |
-| E2E-03..06 | Código, configuração e repetições | A preencher |
-| DIAG-01..03 | Relatório/trace de diagnóstico e análise | A preencher |
-| CI-01..03 | Workflow, execução e artifacts | A preencher |
-| PERF-01..05 | Script/medições próprias ou material do professor e análise | A preencher |
-
-Para quem apenas analisa a demonstração, registrar PERF-01..04 como observados em execução do professor, não como implementação/execução própria. A interpretação PERF-05 permanece individual. Não exigir duplicação de testes para preencher IDs.
-
-## 11. Fora do escopo
+## 10. Fora do escopo
 
 Nova regra bancária, autenticação, banco/ORM, endpoint de reset, carga concorrente de escrita, teste de estresse/soak real, preparação de produção e avaliação de LLMs. Firefox/WebKit e teste de campo vazio são extensões; não substituem os dois cenários obrigatórios no Chromium.
-
-## 12. Referências técnicas
-
-Consultadas em 04/11/2026:
-
-- [Playwright — configuração](https://playwright.dev/docs/test-configuration), [servidor](https://playwright.dev/docs/test-webserver), [fixtures](https://playwright.dev/docs/test-fixtures) e [traces](https://playwright.dev/docs/trace-viewer).
-- [k6 — TypeScript](https://grafana.com/docs/k6/latest/using-k6/javascript-typescript-compatibility-mode/), [checks](https://grafana.com/docs/k6/latest/using-k6/checks/) e [thresholds](https://grafana.com/docs/k6/latest/using-k6/thresholds/).
-- Slides fornecidos, `Aula 03(6).pdf`, e roteiro revisado da Aula 02. As diferenças de convenção estão resolvidas na seção 3.1.

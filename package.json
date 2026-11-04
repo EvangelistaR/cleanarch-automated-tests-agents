@@ -13,7 +13,11 @@
     "build:ts": "tsc -p tsconfig.build.json",
     "test:bdd": "cucumber-js",
     "test:bdd:dry": "cucumber-js --dry-run",
-    "test:bdd:full": "cucumber-js && node scripts/verificar-bdd.cjs"
+    "test:bdd:full": "cucumber-js && node scripts/verificar-bdd.cjs",
+    "test:e2e": "playwright test --project=chromium",
+    "test:e2e:headed": "playwright test --project=chromium --headed",
+    "test:e2e:report": "playwright show-report",
+    "typecheck:k6": "tsc -p tsconfig.k6.json"
   },
   "repository": {
     "type": "git",
